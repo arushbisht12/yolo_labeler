@@ -2,7 +2,11 @@
 
 This tool allows us to label our robocar data quickly and export it for the class dataset.
 
-# Setup
+# Image Setup
+
+1. Move all images into a single directory
+
+# Labeling Setup
 
 1. Clone this repo
 
