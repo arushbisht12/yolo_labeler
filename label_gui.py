@@ -140,6 +140,10 @@ class MainWindow(QMainWindow):
             self.scene.image_width = pixmap.width()
             self.scene.image_height = pixmap.height()
             
+            # --- THE FIX: Zoom out to fit the image in the window ---
+            self.view.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+            # --------------------------------------------------------
+            
             # Update UI Info
             self.info_label.setText(f"Image {index + 1} of {len(self.image_list)}: {os.path.basename(file_path)}")
             self.setWindowTitle(f"YOLO Labeler - {os.path.basename(file_path)}")
