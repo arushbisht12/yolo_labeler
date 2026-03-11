@@ -19,7 +19,7 @@ NOTE: Take photos 1-2 meters away from the robocar in different environments (EB
 
 2. Run 'pip install -r requirements.txt' in a venv or 'uv sync' if you have the uv package manager
 
-3. Launch gui with 'python3 run label_gui.py' or 'uv run label_gui.py'
+3. Launch gui with 'python3 label_gui.py' or 'uv run label_gui.py'
 
 4. Enter team number, press CMD + O to open folder
 
