@@ -11,3 +11,6 @@ wheels/
 
 yolo-detection/dataset/*
 yolo-detection/runs/*
+yolo-detection/*.mp4
+yolo-detection/*.mov
+yolo-detection/oakd_imgs/*

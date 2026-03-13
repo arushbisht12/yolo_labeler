@@ -4,13 +4,35 @@ import depthai as dai
 import numpy as np
 import time
 
+
+MODEL_PATH = "model.rvc2.tar.xz"
+CAPTURE_PATH = "oakd_imgs"
+
+import re
+from pathlib import Path
+
+save_dir = Path(CAPTURE_PATH)
+save_dir.mkdir(exist_ok=True)
+
+pattern = re.compile(r"frame_(\d+)\.png")
+
+existing_indices = []
+
+for f in save_dir.glob("frame_*.png"):
+    m = pattern.match(f.name)
+    if m:
+        existing_indices.append(int(m.group(1)))
+
+img_idx = max(existing_indices) + 1 if existing_indices else 0
+print(f"Starting from frame_{img_idx:04d}")
+
 with dai.Pipeline() as pipeline:
 
     cameraNode = pipeline.create(dai.node.Camera).build()
     detectionNetwork = pipeline.create(dai.node.DetectionNetwork)
     output = cameraNode.requestOutput((256, 256), dai.ImgFrame.Type.RGB888p, dai.ImgResizeMode.LETTERBOX, 30)
     output.link(detectionNetwork.input)
-    detectionNetwork.setNNArchive(dai.NNArchive(Path("model-03-08-2.rvc2.tar.xz")))
+    detectionNetwork.setNNArchive(dai.NNArchive(Path(MODEL_PATH)))
     labelMap = detectionNetwork.getClasses()
     qRgb = detectionNetwork.passthrough.createOutputQueue()
     qDet = detectionNetwork.out.createOutputQueue()
@@ -20,6 +42,7 @@ with dai.Pipeline() as pipeline:
     startTime = time.monotonic()
     counter = 0
     color2 = (255, 255, 255)
+
 
     # nn data, being the bounding box locations, are in <0..1> range - they need to be normalized with frame width/height
     def frameNorm(frame, bbox):
@@ -59,6 +82,9 @@ with dai.Pipeline() as pipeline:
         inDet: dai.ImgDetections = qDet.get()
         if inRgb is not None:
             frame = inRgb.getCvFrame()
+            # Keep a copy of the raw frame for saving
+            raw_frame = frame.copy()
+
             cv2.putText(
                 frame,
                 "NN fps: {:.2f}".format(counter / (time.monotonic() - startTime)),
@@ -75,7 +101,14 @@ with dai.Pipeline() as pipeline:
         if frame is not None:
             displayFrame("rgb", frame)
             print("FPS: {:.2f}".format(counter / (time.monotonic() - startTime)))
-        if cv2.waitKey(1) == ord("q"):
+
+        # Wait for key press
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
             pipeline.stop()
             break
-
+        elif key == ord("s"):  # Save the raw frame
+            save_path = f"{CAPTURE_PATH}/frame_{img_idx:04d}.png"
+            print(f"Saving to: {save_path}")
+            cv2.imwrite(str(save_path), raw_frame)
+            img_idx += 1
